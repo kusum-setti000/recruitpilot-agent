@@ -3,7 +3,7 @@
 Single source of truth for where this project stands. Claude Code updates this at the end of every phase or task, then commits and pushes.
 
 ## Current status
-Engine and CLI complete and tested offline (11 tests). Claude Code setup in place (CLAUDE.md, 4 rules, 6 subagents, /verify). Web app not started.
+Phase 1 complete. Engine and CLI verified: 11 tests pass offline, mock CLI runs all five steps and writes the report. No API key configured; Phase 2 skipped. Ready for Phase 3 (streaming engine + service layer).
 
 ## Done
 - Five-step funnel: JD analysis, internal warm bench first, external search to Top 10, Top 3, final pick with justification
@@ -12,22 +12,25 @@ Engine and CLI complete and tested offline (11 tests). Claude Code setup in plac
 - Placeholder-key detection and fail-fast on rejected API keys
 - Terminal funnel view (narrow-terminal friendly) and markdown report
 - Claude Code configuration: CLAUDE.md, rules (python-style, llm-usage, data-and-privacy, testing, app-ui), subagents (code-reviewer, test-runner, prompt-engineer, source-integrator, fairness-auditor, app-builder), /verify command
+- **Phase 0**: subagent and rules/code consistency check; five-step funnel documented; one stale README test count noted (fix in Phase 6)
+- **Phase 1**: 11 tests pass; mock CLI all five steps; `recruiting_report.md` written; selected INT-001; no API keys configured
 
 ## In progress
 - Nothing yet
 
 ## Next (from docs/MASTER_PROMPT.md)
-- Phase 0: connect and orient
-- Phase 1: verify baseline
-- Phase 2: live model run and comparison (needs a key in .env)
-- Phase 3: streaming engine, service layer, SQLite run history
-- Phase 4: Gradio web app
+- Phase 2: live model run and comparison — SKIPPED (no API key configured)
+- Phase 3: streaming engine (`iter_steps`), service layer (`agent/service.py`), SQLite run history (`agent/storage.py`)
+- Phase 4: Gradio web app (`app.py`)
 - Phase 5: review and harden (code-reviewer, fairness-auditor)
 - Phase 6: README, run_app.ps1, hand-over summary
 
 ## Known issues / decisions
 - No LinkedIn API access: external pool is simulated; real sources plug in via agent/sources (no scraping)
 - OPENAI_MODEL default is a placeholder; confirm the model name before live runs
+- README.md says "9 offline tests" — stale; actual count is 11; will fix in Phase 6
 
 ## Log
 - 2026-11-11: Project scaffolded, engine and CLI built, 11 offline tests passing, Claude Code setup files added.
+- 2026-11-11: Phase 0 — orientation complete; all 6 subagents valid; code/rules/CLAUDE.md consistent; five-step funnel documented.
+- 2026-11-11: Phase 1 — 11 tests pass offline; mock CLI runs all five steps, writes recruiting_report.md, selects INT-001; no API keys present; Phase 2 skipped.
