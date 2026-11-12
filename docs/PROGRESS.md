@@ -3,7 +3,7 @@
 Single source of truth for where this project stands. Claude Code updates this at the end of every phase or task, then commits and pushes.
 
 ## Current status
-Phase 4 complete. Gradio web app built with dark mission-control theme, live stat strip, 5 numbered step sections, History tab with run viewer. 26 tests pass. Ready for Phase 5 (review and harden).
+Phase 4 (review fixes) complete. 5 fixes applied to app.py and service layer: markdown now renders inside the selected-card div, accordions auto-open step by step, CSS injected without deprecation warning, errors show friendly sentences, History tab uses a dropdown of past runs. 27 tests pass. Ready for Phase 5 (review and harden).
 
 ## Done
 - Five-step funnel: JD analysis, internal warm bench first, external search to Top 10, Top 3, final pick with justification
@@ -15,7 +15,7 @@ Phase 4 complete. Gradio web app built with dark mission-control theme, live sta
 - **Phase 0**: subagent and rules/code consistency check; five-step funnel documented; one stale README test count noted (fix in Phase 6)
 - **Phase 1**: 11 tests pass; mock CLI all five steps; `recruiting_report.md` written; selected INT-001; no API keys configured
 - **Phase 3**: `iter_steps()` added to pipeline; `agent/service.py` (RecruitingService, new pipeline per run, no os.environ mutation); `agent/storage.py` (SQLite, proper Pydantic serialization); `recruiting_agent.py` switched to service; 7 new service tests; 18 total pass
-- **Phase 4**: `app.py` Gradio web app; dark mission-control theme (`_CSS`: Saira Condensed / Manrope / JetBrains Mono, accent #E5402E); live stat strip; numbered step accordions 01–05; History tab + run viewer; `tests/test_app.py` (8 tests); `gradio>=6,<7` pinned (6.31.0 installed); 26 total pass
+- **Phase 4**: `app.py` Gradio web app; dark mission-control theme; live stat strip; numbered step accordions 01–05 (auto-open step by step); History tab with dropdown; `gradio>=6,<7` pinned (6.31.0 installed); 27 total pass (9 app tests incl. blank-line and 14-tuple checks)
 
 ## In progress
 - Nothing yet
@@ -36,3 +36,4 @@ Phase 4 complete. Gradio web app built with dark mission-control theme, live sta
 - 2026-11-11: Phase 1 — 11 tests pass offline; mock CLI runs all five steps, writes recruiting_report.md, selects INT-001; no API keys present; Phase 2 skipped.
 - 2026-11-11: Phase 3 — added iter_steps() to pipeline; created agent/service.py (RecruitingService; new pipeline per run; no os.environ mutation; Pydantic-safe Settings.replace); created agent/storage.py (SQLite, proper JSON serialization of Pydantic models); updated recruiting_agent.py to use service; added tests/test_service.py (7 tests); 18 total pass.
 - 2026-11-11: Phase 4 — built app.py (Gradio Blocks, dark mission-control theme, stat strip, numbered steps, History with reopen); added tests/test_app.py (8 tests); pinned gradio>=6,<7 (6.31.0 installed); 26 total pass. Applied corrections: JD prefill, hide_names in step5, fallback info in status, stat strip output, yield count fixes, CSS theme per app-ui.md visual theme spec.
+- 2026-11-11: Phase 4 review fixes — _fmt_step5 blank lines (markdown renders); accordions auto-open step-by-step (14-tuple yields); CSS via gr.HTML style tag (no deprecation warning); friendly error messages in UI; RecruitingService.get_run() added; History tab dropdown replaces textbox+button; app.py no longer imports agent.storage; test_fmt_step5_blank_lines_after_div added; 27 total pass.

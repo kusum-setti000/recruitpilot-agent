@@ -14,7 +14,7 @@ from typing import Iterator, Optional
 from agent.config import Settings, get_settings
 from agent.pipeline import PipelineResult, RecruitingPipeline
 from agent.report import build_report
-from agent.storage import RunStorage, RunSummary
+from agent.storage import RunRecord, RunStorage, RunSummary
 
 log = logging.getLogger(__name__)
 
@@ -66,3 +66,8 @@ class RecruitingService:
     def list_runs(self) -> list[RunSummary]:
         settings = get_settings()
         return self._storage(settings).list_runs()
+
+    def get_run(self, run_id: str) -> Optional[RunRecord]:
+        """Return the full RunRecord for the given run ID, or None if not found."""
+        settings = get_settings()
+        return self._storage(settings).get_run(run_id)

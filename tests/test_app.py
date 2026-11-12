@@ -18,8 +18,8 @@ def test_run_pipeline_yields_six_updates():
     from app import run_pipeline
     updates = list(run_pipeline(JD, None, "mock", False))
     assert len(updates) == 6
-    # Each update is a 9-tuple: status, s1-s5, download, preview, stat_html
-    assert all(len(u) == 9 for u in updates)
+    # Each update is a 14-tuple: status, s1-s5, download, preview, stat_html, acc1-acc5
+    assert all(len(u) == 14 for u in updates)
 
 
 def test_run_pipeline_step_outputs_accumulate():
@@ -66,7 +66,7 @@ def test_run_pipeline_short_input_returns_single_error_update():
     from app import run_pipeline
     updates = list(run_pipeline("too short", None, "mock", False))
     assert len(updates) == 1
-    assert len(updates[0]) == 9
+    assert len(updates[0]) == 14
     # s1-s5 are at indices 1-5; all must be empty strings
     all_steps_empty = all(u == "" for u in updates[0][1:6])
     assert all_steps_empty
@@ -94,7 +94,7 @@ def test_app_css_contains_theme_tokens():
 
 
 def test_view_run_returns_report(tmp_path, monkeypatch):
-    """view_run must return the saved report markdown when given a valid run ID prefix."""
+    """view_run_by_id must return the saved report markdown when given a valid run ID."""
     from agent.service import RecruitingService
     from agent.storage import RunStorage
     from agent.config import get_settings
@@ -105,12 +105,23 @@ def test_view_run_returns_report(tmp_path, monkeypatch):
     runs = storage.list_runs()
     run_id = runs[0].run_id
 
-    # Monkeypatch get_settings so view_run finds the tmp db
+    # Monkeypatch so view_run_by_id finds the tmp db via service.get_run()
     settings = get_settings()
     settings.history_db = tmp_path / "test.db"
     monkeypatch.setattr("agent.config.get_settings", lambda: settings)
+    monkeypatch.setattr("agent.service.get_settings", lambda: settings)
 
-    from app import view_run
-    report = view_run(run_id[:8])
+    from app import view_run_by_id
+    report = view_run_by_id(run_id)
     assert "## Step 1" in report
     assert runs[0].selected_id in report
+
+
+def test_fmt_step5_blank_lines_after_div():
+    """_fmt_step5 must have '\\n\\n' right after the opening rp-selected-card div."""
+    from app import _fmt_step5
+    from agent.pipeline import RecruitingPipeline
+    from agent.config import get_settings
+    result = RecruitingPipeline(get_settings()).run(JD)
+    output = _fmt_step5(result, show_names=True)
+    assert '<div class="rp-selected-card">\n\n' in output

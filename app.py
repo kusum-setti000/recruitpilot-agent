@@ -345,6 +345,7 @@ def _fmt_step5(r, show_names: bool = True) -> str:
     pick_label = f"{pick.name} ({pick.id})" if show_names else pick.id
     lines = [
         '<div class="rp-selected-card">',
+        "",
         f"### Selected: {pick_label}",
         f"**{f.headline}** | Confidence: **{f.confidence}**",
         "",
@@ -370,7 +371,7 @@ def _fmt_step5(r, show_names: bool = True) -> str:
     lines += [f"- {q}" for q in f.interview_focus]
     if r.fallbacks_used:
         lines += ["", f"> Deterministic fallback used for: {', '.join(r.fallbacks_used)}"]
-    lines.append("</div>")
+    lines += ["", "</div>"]
     return "\n".join(lines)
 
 
@@ -402,6 +403,7 @@ def run_pipeline(
         yield (
             gr.update(value="Please enter or upload a job description (at least 50 characters)."),
             "", "", "", "", "", gr.update(visible=False), gr.update(visible=False), "",
+            gr.update(), gr.update(), gr.update(), gr.update(), gr.update(),
         )
         return
 
@@ -426,17 +428,20 @@ def run_pipeline(
             elif step_num == 5:
                 s5 = _fmt_step5(result, show_names=not hide_names)
             stat_html = _fmt_stat_strip(result)
+            acc_updates = tuple(gr.update(open=True) if i == step_num else gr.update() for i in range(1, 6))
             yield (
                 gr.update(value=f"Running… step {step_num}/5  ·  {result.llm_label}"),
                 s1, s2, s3, s4, s5,
                 gr.update(visible=False), gr.update(visible=False), stat_html,
+                *acc_updates,
             )
     except Exception as exc:
         log.exception("Pipeline error")
         yield (
-            gr.update(value=f"Error: {exc}"),
+            gr.update(value="Something went wrong running the funnel. Check the terminal log for details."),
             s1, s2, s3, s4, s5,
             gr.update(visible=False), gr.update(visible=False), stat_html,
+            gr.update(), gr.update(), gr.update(), gr.update(), gr.update(),
         )
         return
 
@@ -457,34 +462,31 @@ def run_pipeline(
             gr.update(value=tmp.name, visible=True),
             gr.update(value=report_md, visible=True),
             _fmt_stat_strip(result),
+            gr.update(), gr.update(), gr.update(), gr.update(), gr.update(),
         )
     else:
         yield (
             gr.update(value="Pipeline completed with no final result."),
             s1, s2, s3, s4, s5,
             gr.update(visible=False), gr.update(visible=False), stat_html,
+            gr.update(), gr.update(), gr.update(), gr.update(), gr.update(),
         )
 
 
-def view_run(run_id_prefix: str) -> str:
-    """Return the saved report markdown for the run matching the given ID prefix."""
-    from agent.config import get_settings
-    from agent.storage import RunStorage
-    if not run_id_prefix or not run_id_prefix.strip():
+def view_run_by_id(run_id: str) -> str:
+    """Return the saved report markdown for the given run ID."""
+    if not run_id:
         return ""
     try:
-        settings = get_settings()
-        storage = RunStorage(settings.history_db)
-        runs = storage.list_runs()
-        prefix = run_id_prefix.strip()
-        matched = [r.run_id for r in runs if r.run_id.startswith(prefix)]
-        if not matched:
-            return "_No run found with that ID._"
-        record = storage.get_run(matched[0])
-        return record.report_md if record else "_Run not found._"
+        from agent.service import RecruitingService
+        svc = RecruitingService()
+        record = svc.get_run(run_id)
+        if record is None:
+            return "_Run not found._"
+        return record.report_md
     except Exception as exc:
-        log.warning("Could not load run: %s", exc)
-        return f"_Could not load run: {exc}_"
+        log.exception("Could not load run")
+        return "_Could not load this run. Check the terminal log for details._"
 
 
 def load_history() -> str:
@@ -503,14 +505,27 @@ def load_history() -> str:
             )
         return "\n".join(rows)
     except Exception as exc:
-        log.warning("Could not load history: %s", exc)
-        return f"_Could not load history: {exc}_"
+        log.exception("Could not load history")
+        return "_Could not load history. Check the terminal log for details._"
+
+
+def load_history_choices() -> list:
+    """Return (label, run_id) pairs for the past-runs dropdown."""
+    try:
+        from agent.service import RecruitingService
+        svc = RecruitingService()
+        runs = svc.list_runs()
+        return [(f"{r.timestamp[:16]} · {r.job_title} · {r.selected_id}", r.run_id) for r in runs]
+    except Exception as exc:
+        log.warning("Could not load history choices: %s", exc)
+        return []
 
 
 def build_app() -> "gr.Blocks":
     import gradio as gr
 
-    with gr.Blocks(title="RecruitPilot", css=_CSS) as demo:
+    with gr.Blocks(title="RecruitPilot") as demo:
+        gr.HTML(f"<style>{_CSS}</style>")
         gr.HTML('<div class="rp-header">Recruit&nbsp;&nbsp;Pilot</div>')
 
         with gr.Tabs():
@@ -542,15 +557,15 @@ def build_app() -> "gr.Blocks":
                         status_box = gr.Textbox(label="Status", interactive=False, lines=1)
                         stat_strip = gr.HTML(value="")
 
-                        with gr.Accordion("01 · JD Analysis", open=True):
+                        with gr.Accordion("01 · JD Analysis", open=True) as acc1:
                             step1_out = gr.Markdown()
-                        with gr.Accordion("02 · Warm Bench", open=False):
+                        with gr.Accordion("02 · Warm Bench", open=False) as acc2:
                             step2_out = gr.Markdown()
-                        with gr.Accordion("03 · Top 10 Shortlist", open=False):
+                        with gr.Accordion("03 · Top 10 Shortlist", open=False) as acc3:
                             step3_out = gr.Markdown()
-                        with gr.Accordion("04 · Evaluation & Top 3", open=False):
+                        with gr.Accordion("04 · Evaluation & Top 3", open=False) as acc4:
                             step4_out = gr.Markdown()
-                        with gr.Accordion("05 · Selected", open=False):
+                        with gr.Accordion("05 · Selected", open=False) as acc5:
                             step5_out = gr.Markdown()
 
                         report_download = gr.File(
@@ -567,6 +582,7 @@ def build_app() -> "gr.Blocks":
                         status_box,
                         step1_out, step2_out, step3_out, step4_out, step5_out,
                         report_download, report_preview, stat_strip,
+                        acc1, acc2, acc3, acc4, acc5,
                     ],
                 )
 
@@ -576,13 +592,19 @@ def build_app() -> "gr.Blocks":
             with gr.Tab("History"):
                 refresh_btn = gr.Button("Refresh")
                 history_md = gr.Markdown(value=load_history())
-                refresh_btn.click(fn=load_history, inputs=[], outputs=[history_md])
-                gr.Markdown("---\n**Reopen a run:** paste the Run ID (or first 8 chars) and click View.")
-                with gr.Row():
-                    run_id_input = gr.Textbox(label="Run ID", placeholder="e.g. 3fa85f64", scale=3)
-                    view_btn = gr.Button("View Report", scale=1)
+                run_dropdown = gr.Dropdown(
+                    choices=load_history_choices(),
+                    label="Open a past run",
+                    interactive=True,
+                    value=None,
+                )
                 report_view = gr.Markdown(value="")
-                view_btn.click(fn=view_run, inputs=[run_id_input], outputs=[report_view])
+
+                def _refresh():
+                    return load_history(), gr.update(choices=load_history_choices())
+
+                refresh_btn.click(fn=_refresh, inputs=[], outputs=[history_md, run_dropdown])
+                run_dropdown.change(fn=view_run_by_id, inputs=[run_dropdown], outputs=[report_view])
 
     return demo
 
