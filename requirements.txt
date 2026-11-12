@@ -4,3 +4,4 @@ rich>=13.7
 anthropic>=0.40
 openai>=1.40
 pytest>=8.0
+gradio>=6,<7
