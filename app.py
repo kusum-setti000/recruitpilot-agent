@@ -21,6 +21,9 @@ log = logging.getLogger(__name__)
 
 ROOT = Path(__file__).resolve().parent
 
+# Provider set by --provider at startup; used as fallback when UI dropdown is "auto"
+_DEFAULT_PROVIDER: str | None = None
+
 # Prefill the JD textbox with the sample jd.txt if it exists
 _jd_path = ROOT / "jd.txt"
 _jd_default = _jd_path.read_text(encoding="utf-8") if _jd_path.exists() else ""
@@ -407,8 +410,8 @@ def run_pipeline(
         )
         return
 
-    # Map UI provider label to service provider arg
-    provider_arg = None if provider == "auto" else provider
+    # Map UI provider label to service provider arg; fall back to startup default
+    provider_arg = provider if provider != "auto" else _DEFAULT_PROVIDER
 
     svc = RecruitingService()
     s1 = s2 = s3 = s4 = s5 = ""
@@ -416,7 +419,7 @@ def run_pipeline(
     result = None
 
     try:
-        for step_num, result in svc.stream(text, provider=provider_arg, hide_names=hide_names):
+        for step_num, result in svc.stream(text, provider=provider_arg):
             if step_num == 1:
                 s1 = _fmt_step1(result)
             elif step_num == 2:
@@ -447,8 +450,15 @@ def run_pipeline(
 
     # Write report to a temp file for download
     if result is not None and result.final is not None:
-        from agent.report import build_report
-        report_md = build_report(result)
+        # Use the already-stored report to avoid building twice
+        report_md = None
+        if svc._last_run_id:
+            record = svc.get_run(svc._last_run_id)
+            if record:
+                report_md = record.report_md
+        if report_md is None:
+            from agent.report import build_report
+            report_md = build_report(result)
         tmp = tempfile.NamedTemporaryFile(
             suffix=".md", prefix="recruiting_report_", delete=False, mode="w", encoding="utf-8"
         )
@@ -616,8 +626,9 @@ def main() -> None:
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args()
 
+    global _DEFAULT_PROVIDER
     if args.provider:
-        os.environ["LLM_PROVIDER"] = args.provider
+        _DEFAULT_PROVIDER = args.provider
 
     logging.basicConfig(
         level=logging.INFO if args.verbose else logging.ERROR,

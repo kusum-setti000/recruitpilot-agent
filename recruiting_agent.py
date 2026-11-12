@@ -44,8 +44,6 @@ def main() -> None:
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args()
 
-    if args.provider:
-        os.environ["LLM_PROVIDER"] = args.provider
     logging.basicConfig(level=logging.INFO if args.verbose else logging.ERROR, format="%(levelname)s %(message)s")
 
     from agent.config import get_settings, looks_like_real_key
@@ -56,7 +54,7 @@ def main() -> None:
     settings = get_settings()
     jd_text = read_jd(args)
 
-    if settings.llm_provider == "mock":
+    if (args.provider or settings.llm_provider) == "mock":
         placeholders = [k for k in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY")
                         if os.getenv(k) and not looks_like_real_key(os.getenv(k))]
         if placeholders:
@@ -69,7 +67,7 @@ def main() -> None:
     service = RecruitingService()
     header_printed = False
 
-    for step_num, result in service.stream(jd_text, provider=args.provider, hide_names=args.hide_names):
+    for step_num, result in service.stream(jd_text, provider=args.provider):
         if not header_printed:
             console.print(f"[bold]AI Recruiting Agent[/]  model: [cyan]{result.llm_label}[/]")
             header_printed = True

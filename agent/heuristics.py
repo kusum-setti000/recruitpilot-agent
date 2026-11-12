@@ -221,10 +221,12 @@ def final_selection(finalists: list[ScoredCandidate], evals: dict[str, Candidate
                     tie_margin: int = 3) -> FinalSelection:
     ordered = sorted(finalists, key=lambda s: evals[s.candidate.id].overall, reverse=True)
     pick = ordered[0]
-    # Recruiter policy: a proven warm-bench re-hire wins a near tie.
+    # Recruiter policy: a proven warm-bench re-hire wins a near tie — but only when
+    # the internal candidate covers at least as many must-haves as the current pick.
     for s in ordered[1:]:
         if (s.candidate.origin == "internal" and pick.candidate.origin != "internal"
-                and evals[pick.candidate.id].overall - evals[s.candidate.id].overall <= tie_margin):
+                and evals[pick.candidate.id].overall - evals[s.candidate.id].overall <= tie_margin
+                and len(s.missing_core) <= len(pick.missing_core)):
             pick = s
             break
     pc, pe = pick.candidate, evals[pick.candidate.id]
@@ -253,7 +255,7 @@ def final_selection(finalists: list[ScoredCandidate], evals: dict[str, Candidate
             why_not_selected=f"Strong option (overall {e.overall} vs {pe.overall}) but {'; '.join(reasons)}."))
 
     gap_vs_next = pe.overall - evals[others[0].candidate.id].overall if others else 99
-    confidence = "High" if gap_vs_next >= 8 else "Medium" if gap_vs_next >= 0 else "Medium"
+    confidence = "High" if gap_vs_next >= 8 else "Low" if gap_vs_next < 0 else "Medium"
     if pick.missing_core:
         confidence = "Medium" if confidence == "High" else "Low"
 

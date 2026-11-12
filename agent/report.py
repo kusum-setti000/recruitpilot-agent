@@ -93,8 +93,12 @@ def build_report(r: PipelineResult) -> str:
     add("**Interview focus**\n")
     add("\n".join(f"- {q}" for q in f.interview_focus) + "\n")
 
-    add("---\n*Candidate names were withheld from the LLM during evaluation; only job-relevant fields were "
-        "shared. All profiles in this demo are synthetic.*")
+    from agent.config import get_settings
+    _s = get_settings()
+    names_note = ("Candidate names were withheld from the LLM during evaluation; only job-relevant fields were shared."
+                  if not _s.send_names_to_llm
+                  else "Candidate names were shared with the LLM (SEND_NAMES_TO_LLM=true).")
+    add(f"---\n*{names_note} All profiles in this demo are synthetic.*")
     return "\n".join(L)
 
 

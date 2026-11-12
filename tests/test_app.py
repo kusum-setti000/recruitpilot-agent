@@ -1,6 +1,7 @@
 """Offline tests for app.py callback functions. No server is started."""
 from __future__ import annotations
 
+import dataclasses
 import os
 from pathlib import Path
 
@@ -106,8 +107,7 @@ def test_view_run_returns_report(tmp_path, monkeypatch):
     run_id = runs[0].run_id
 
     # Monkeypatch so view_run_by_id finds the tmp db via service.get_run()
-    settings = get_settings()
-    settings.history_db = tmp_path / "test.db"
+    settings = dataclasses.replace(get_settings(), history_db=tmp_path / "test.db")
     monkeypatch.setattr("agent.config.get_settings", lambda: settings)
     monkeypatch.setattr("agent.service.get_settings", lambda: settings)
 

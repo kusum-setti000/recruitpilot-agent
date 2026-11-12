@@ -84,9 +84,4 @@ def test_list_runs(tmp_path):
     svc = RecruitingService(db_path=tmp_path / "test.db")
     svc.run(JD, provider="mock")
     svc.run(JD, provider="mock")
-    runs = svc.list_runs()
-    # list_runs uses default settings path, not tmp_path — use storage directly
-    from agent.storage import RunStorage
-    storage = RunStorage(tmp_path / "test.db")
-    runs = storage.list_runs()
-    assert len(runs) == 2
+    assert len(svc.list_runs()) == 2

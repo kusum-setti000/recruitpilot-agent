@@ -20,9 +20,11 @@ log = logging.getLogger(__name__)
 
 
 class RecruitingService:
-    def __init__(self, db_path: Optional[Path] = None) -> None:
+    def __init__(self, db_path: Optional[Path] = None, default_provider: Optional[str] = None) -> None:
         # db_path is optional; defaults to settings.history_db so tests can use a temp file
         self._default_db_path = db_path
+        self._default_provider = default_provider
+        self._last_run_id: Optional[str] = None
 
     def _storage(self, settings: Settings) -> RunStorage:
         path = self._default_db_path or settings.history_db
@@ -31,15 +33,15 @@ class RecruitingService:
     def _make_settings(self, provider: Optional[str]) -> Settings:
         """Return Settings with an optional provider override. Never touches os.environ."""
         settings = get_settings()
-        if provider and provider != "auto":
-            settings = dataclasses.replace(settings, llm_provider=provider)
+        effective = provider if (provider and provider != "auto") else self._default_provider
+        if effective and effective != "auto":
+            settings = dataclasses.replace(settings, llm_provider=effective)
         return settings
 
     def stream(
         self,
         jd_text: str,
         provider: Optional[str] = None,
-        hide_names: bool = False,
     ) -> Iterator[tuple[int, PipelineResult]]:
         """Yield (step_number, PipelineResult) after each of the five steps."""
         settings = self._make_settings(provider)
@@ -49,17 +51,16 @@ class RecruitingService:
             yield step_num, result
         if result is not None and result.final is not None:
             storage = self._storage(settings)
-            storage.save_run(result, build_report(result))
+            self._last_run_id = storage.save_run(result, build_report(result))
 
     def run(
         self,
         jd_text: str,
         provider: Optional[str] = None,
-        hide_names: bool = False,
     ) -> PipelineResult:
         """Run the full pipeline and return the final result."""
         result = None
-        for _, result in self.stream(jd_text, provider=provider, hide_names=hide_names):
+        for _, result in self.stream(jd_text, provider=provider):
             pass
         return result
 
