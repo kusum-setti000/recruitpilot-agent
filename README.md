@@ -34,7 +34,7 @@ python -m venv .venv
 pip install -r requirements.txt
 
 python recruiting_agent.py --provider mock     # offline run, no key needed
-pytest -q                                      # 9 offline tests
+pytest -q                                      # 27 offline tests
 ```
 
 To use a real model, copy `.env.example` to `.env` and paste ONE key:
@@ -45,7 +45,7 @@ notepad .env        # set ANTHROPIC_API_KEY=... (or OPENAI_API_KEY=...)
 python recruiting_agent.py
 ```
 
-Other ways to run it:
+Other CLI flags:
 
 ```powershell
 python recruiting_agent.py --jd C:\path\to\another_jd.txt
@@ -53,6 +53,46 @@ python recruiting_agent.py --interactive        # paste a JD into the terminal
 python recruiting_agent.py --hide-names         # IDs only on screen
 python scripts/generate_dummy_data.py --seed 7  # new synthetic dataset
 ```
+
+## Application (Gradio web UI)
+
+RecruitPilot is the browser interface over the same five-step engine. Launch it with:
+
+```powershell
+python app.py --provider mock    # offline, no key needed
+# then open http://127.0.0.1:7860
+```
+
+Or use the helper script (activates `.venv` automatically):
+
+```powershell
+.\run_app.ps1 --provider mock
+```
+
+### What you see
+
+**Run tab** — paste or upload a job description, pick a provider, then click **Run**. Five accordion panels open one by one as the pipeline streams results:
+
+| Panel | Opens when… | What it shows |
+|---|---|---|
+| 01 · JD Analysis | Step 1 completes | Must-have skills with alternatives, bonus skills, min years, Boolean queries |
+| 02 · Warm Bench | Step 2 completes | Internal re-hire matches with LLM fit notes; excluded hires with policy reason |
+| 03 · Top 10 Shortlist | Step 3 completes | All 10 candidates with origin, years, hybrid score, must-have coverage |
+| 04 · Evaluation & Top 3 | Step 4 completes | LLM ratings (skill / depth / domain / overall); Top 3 highlighted |
+| 05 · Selected | Step 5 completes | Final pick: headline, full justification, why-not-each-finalist, gaps, risks, interview focus |
+
+A stat strip above the panels updates live (Profiles Screened → Warm Bench → Shortlisted → **Selected**). When done: the status bar shows the provider that ran and any fallback steps; a **Download Report** button saves the full markdown; the report preview appears below.
+
+**History tab** — every completed run is saved to `runs/history.db`. A table shows past runs and a dropdown lets you reopen any saved report. Click **Refresh** after new runs.
+
+### Demo run (under two minutes)
+
+1. `.\run_app.ps1 --provider mock`
+2. Open http://127.0.0.1:7860
+3. The JD is prefilled — click **Run** (mock mode takes ~3 seconds)
+4. Watch the five accordions open one by one; the stat strip fills in
+5. Click **Download Report (.md)** to save the markdown
+6. Click **History** → the run appears; select it from the dropdown to reopen the report
 
 ## How the LLM is used safely
 
@@ -76,15 +116,19 @@ it, set `EXTERNAL_SOURCES=json_external,<name>` and nothing else changes.
 ## Project layout
 
 ```
-ai-recruiting-agent/
+recruitpilot-agent/
+├── app.py                       Gradio web app (browser UI)
 ├── recruiting_agent.py          CLI entry point
+├── run_app.ps1                  helper: activate .venv then start app.py
 ├── jd.txt                       sample JD (Senior Generative AI Engineer)
 ├── agent/
 │   ├── config.py                env settings and recruiter policy knobs
 │   ├── models.py                Candidate + LLM output schemas
 │   ├── llm.py                   provider-agnostic structured calls, retry, fallback
 │   ├── prompts.py               prompt text and recruiter persona
-│   ├── pipeline.py              the five steps
+│   ├── pipeline.py              the five steps + iter_steps() streaming generator
+│   ├── service.py               RecruitingService: stream, run, list_runs, get_run
+│   ├── storage.py               SQLite run history (runs/history.db)
 │   ├── heuristics.py            deterministic version of each LLM step
 │   ├── matching.py              requirement checks, BM25, Boolean parser, hybrid score
 │   ├── skills_vocab.py          aliases + implications (pgvector ⇒ Vector Databases)
@@ -92,12 +136,17 @@ ai-recruiting-agent/
 │   └── sources/                 CandidateSource interface + adapters
 ├── data/                        20 internal + 100 external synthetic profiles
 ├── scripts/generate_dummy_data.py
-├── tests/test_pipeline.py
+├── tests/
+│   ├── test_pipeline.py         11 offline funnel tests
+│   ├── test_service.py          7 service + storage tests
+│   └── test_app.py              9 app callback tests
+├── docs/PROGRESS.md             project status (single source of truth)
 ├── CLAUDE.md                    project memory for Claude Code
 └── .claude/
     ├── settings.json            allowed commands, .env read-blocked
-    ├── rules/                   python-style, llm-usage, data-and-privacy, testing
-    └── agents/                  code-reviewer, test-runner, prompt-engineer, source-integrator, fairness-auditor
+    ├── rules/                   python-style, llm-usage, data-and-privacy, testing, app-ui
+    └── agents/                  code-reviewer, test-runner, prompt-engineer, source-integrator,
+                                 fairness-auditor, app-builder
 ```
 
 ## Recommended stack for the next iterations (kept distinct from HireSphere-AI)

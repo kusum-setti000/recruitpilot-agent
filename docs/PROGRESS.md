@@ -3,7 +3,7 @@
 Single source of truth for where this project stands. Claude Code updates this at the end of every phase or task, then commits and pushes.
 
 ## Current status
-Phase 5 complete. Code-reviewer (4 SHOULD-FIX, 5 LOW) and fairness-auditor (0 BLOCKER, 9 SHOULD-FIX, 6 LOW) run; all SHOULD-FIX and selected fairness HIGH findings fixed. 27 tests pass. Ready for Phase 6 (docs and hand-over).
+All phases complete. 27 offline tests pass. CLI and web app both work in mock mode. README has Application section. run_app.ps1 added. Fairness SHOULD-FIX backlog documented.
 
 ## Done
 - Five-step funnel: JD analysis, internal warm bench first, external search to Top 10, Top 3, final pick with justification
@@ -17,13 +17,14 @@ Phase 5 complete. Code-reviewer (4 SHOULD-FIX, 5 LOW) and fairness-auditor (0 BL
 - **Phase 3**: `iter_steps()` added to pipeline; `agent/service.py` (RecruitingService, new pipeline per run, no os.environ mutation); `agent/storage.py` (SQLite, proper Pydantic serialization); `recruiting_agent.py` switched to service; 7 new service tests; 18 total pass
 - **Phase 4**: `app.py` Gradio web app; dark mission-control theme; live stat strip; numbered step accordions 01–05 (auto-open step by step); History tab with dropdown; `gradio>=6,<7` pinned (6.31.0 installed); 27 total pass (9 app tests incl. blank-line and 14-tuple checks)
 - **Phase 5**: code-reviewer (SF-1–SF-4 fixed) + fairness-auditor (0 BLOCKERs; S3, S7, L5 fixed; 7 items in backlog); 27 total pass
+- **Phase 6**: README Application section + correct test count (27); run_app.ps1 added; project layout updated; CLAUDE.md and rules unchanged (already up to date); PROGRESS.md marking all phases done
 
 ## In progress
 - Nothing
 
-## Next (from docs/MASTER_PROMPT.md)
-- Phase 2: live model run and comparison — SKIPPED (no API key configured)
-- Phase 6: complete (see Done)
+## Next
+- Live model run (Phase 2): copy .env.example to .env, add ANTHROPIC_API_KEY, then run `python recruiting_agent.py`
+- Fairness backlog (7 items): location check, triple internal preference, years cap, raw location to LLM, one-sided rejection reasons, score breakdown on screen, LLM schema explanations
 
 ## Known issues / decisions
 - No LinkedIn API access: external pool is simulated; real sources plug in via agent/sources (no scraping)
@@ -39,3 +40,4 @@ Phase 5 complete. Code-reviewer (4 SHOULD-FIX, 5 LOW) and fairness-auditor (0 BL
 - 2026-11-11: Phase 4 review fixes — _fmt_step5 blank lines (markdown renders); accordions auto-open step-by-step (14-tuple yields); CSS via gr.HTML style tag (no deprecation warning); friendly error messages in UI; RecruitingService.get_run() added; History tab dropdown replaces textbox+button; app.py no longer imports agent.storage; test_fmt_step5_blank_lines_after_div added; 27 total pass.
 - 2026-11-11: Phase 4: moved CSS to launch() — css=_CSS on demo.launch() instead of gr.Blocks(); no deprecation warning confirmed.
 - 2026-11-11: Phase 5 — code-reviewer: removed misleading hide_names from service API (SF-1); fixed os.environ mutation with _DEFAULT_PROVIDER module var (SF-2); fixed dead test code in test_list_runs (SF-3); app.py now uses stored report from SQLite instead of rebuilding (SF-4). Fairness-auditor: no BLOCKERs; warm-bench tiebreak now requires missing_core ≤ pick's (S3); confidence dead code fixed (L5); report footer accurate when SEND_NAMES_TO_LLM=true (S7); test uses dataclasses.replace (L-5). 27 total pass.
+- 2026-11-11: Phase 6 — README Application section (web UI how-to, demo steps, project layout updated); run_app.ps1 added; PROGRESS.md marking all phases done. 27 tests pass.
