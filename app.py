@@ -525,7 +525,6 @@ def build_app() -> "gr.Blocks":
     import gradio as gr
 
     with gr.Blocks(title="RecruitPilot") as demo:
-        gr.HTML(f"<style>{_CSS}</style>")
         gr.HTML('<div class="rp-header">Recruit&nbsp;&nbsp;Pilot</div>')
 
         with gr.Tabs():
@@ -626,7 +625,7 @@ def main() -> None:
     )
 
     demo = build_app()
-    demo.launch(server_name="127.0.0.1", server_port=args.port, share=False)
+    demo.launch(server_name="127.0.0.1", server_port=args.port, share=False, css=_CSS)
 
 
 if __name__ == "__main__":
