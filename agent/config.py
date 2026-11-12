@@ -65,6 +65,8 @@ class Settings:
 
     today: date = field(default_factory=lambda: date.fromisoformat(os.getenv("AGENT_TODAY", date.today().isoformat())))
 
+    history_db: Path = field(default_factory=lambda: ROOT / os.getenv("HISTORY_DB", "runs/history.db"))
+
 
 def get_settings() -> Settings:
     return Settings()

@@ -15,7 +15,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from datetime import date, timedelta
-from typing import Optional, Protocol
+from typing import Iterator, Optional, Protocol
 
 from agent import heuristics, prompts
 from agent.config import Settings
@@ -219,26 +219,30 @@ class RecruitingPipeline:
             validator=validate, max_tokens=4000,
         )
 
-    # ---------------- run ----------------
-    def run(self, jd_text: str) -> PipelineResult:
+    # ---------------- iter_steps ----------------
+    def iter_steps(self, jd_text: str) -> Iterator[tuple[int, PipelineResult]]:
         self._jd_text = jd_text
         r = PipelineResult(jd_text=jd_text, llm_label=self.llm.label)
 
         r.jd = self.analyze_jd(jd_text)
         self._notify(1, r)
+        yield 1, r
 
         r.internal_checks = self.internal_check(r.jd)
         self._notify(2, r)
+        yield 2, r
 
         r.shortlist, r.external_pool_size, r.query_hits = self.build_shortlist(r.jd, r.internal_checks)
         self._notify(3, r)
         if not r.shortlist:
             raise RuntimeError("No candidates found in any source")
+        yield 3, r
 
         r.evaluation = self.evaluate_shortlist(r.jd, r.shortlist)
         evals = r.evals_by_id
         r.finalists = [r.candidate(cid) for cid in r.evaluation.top3_ids]
         self._notify(4, r)
+        yield 4, r
 
         rest = [s for s in r.shortlist if s.candidate.id not in set(r.evaluation.top3_ids)]
         total = r.external_pool_size + len(r.internal_checks)
@@ -246,4 +250,11 @@ class RecruitingPipeline:
         r.fallbacks_used = [h.step for h in self.llm.history if h.used_fallback]
         r.llm_disabled_reason = self.llm.disabled_reason
         self._notify(5, r)
+        yield 5, r
+
+    # ---------------- run ----------------
+    def run(self, jd_text: str) -> PipelineResult:
+        r = None
+        for _, r in self.iter_steps(jd_text):
+            pass
         return r

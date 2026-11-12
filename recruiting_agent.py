@@ -48,17 +48,15 @@ def main() -> None:
         os.environ["LLM_PROVIDER"] = args.provider
     logging.basicConfig(level=logging.INFO if args.verbose else logging.ERROR, format="%(levelname)s %(message)s")
 
-    from agent.config import get_settings
+    from agent.config import get_settings, looks_like_real_key
     from agent.display import TerminalObserver, console
-    from agent.pipeline import RecruitingPipeline
     from agent.report import write_report
+    from agent.service import RecruitingService
 
     settings = get_settings()
     jd_text = read_jd(args)
-    pipeline = RecruitingPipeline(settings, observer=TerminalObserver(show_names=not args.hide_names))
-    console.print(f"[bold]AI Recruiting Agent[/]  model: [cyan]{pipeline.llm.label}[/]")
+
     if settings.llm_provider == "mock":
-        from agent.config import looks_like_real_key
         placeholders = [k for k in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY")
                         if os.getenv(k) and not looks_like_real_key(os.getenv(k))]
         if placeholders:
@@ -67,7 +65,16 @@ def main() -> None:
         console.print("[yellow]No API key found, running offline with deterministic logic. "
                       "Add ANTHROPIC_API_KEY or OPENAI_API_KEY to .env for live LLM reasoning.[/]")
 
-    result = pipeline.run(jd_text)
+    observer = TerminalObserver(show_names=not args.hide_names)
+    service = RecruitingService()
+    header_printed = False
+
+    for step_num, result in service.stream(jd_text, provider=args.provider, hide_names=args.hide_names):
+        if not header_printed:
+            console.print(f"[bold]AI Recruiting Agent[/]  model: [cyan]{result.llm_label}[/]")
+            header_printed = True
+        observer.step(step_num, result)
+
     out = write_report(result, Path(args.out))
     console.print(f"\n[bold green]Report saved to {out}[/]")
 
