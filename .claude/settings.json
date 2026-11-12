@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pytest:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(python recruiting_agent.py:*)",
+      "Bash(python app.py:*)",
+      "Bash(python scripts/generate_dummy_data.py:*)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)"
+    ],
+    "deny": [
+      "Read(./.env)"
+    ]
+  }
+}

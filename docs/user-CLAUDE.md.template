@@ -1,0 +1,18 @@
+# Copy this file to ~/.claude/CLAUDE.md (Windows: %USERPROFILE%\.claude\CLAUDE.md)
+# It loads in EVERY project you open with Claude Code. Keep it personal and short;
+# project-specific rules belong in the project's own CLAUDE.md and .claude/rules/.
+
+# About me
+Gen AI engineer, ~10 years across data science, ML and GenAI. Python first. I work in VS Code on Windows with PowerShell.
+
+# How I like to work
+- Make surgical, instruction-faithful edits. Do not refactor or restyle code I did not ask you to touch.
+- Before a multi-file change, give me a short plan and wait for a go-ahead.
+- Run the tests after every change and show me the result.
+- Explain trade-offs in plain conversational prose. Skip long preambles.
+- When unsure about a library API or version, check the docs instead of guessing.
+
+# Defaults
+- Python 3.13, type hints, Pydantic v2 for data crossing boundaries, pytest for tests.
+- Secrets only in .env, never hard-coded, never printed.
+- Never commit, push, or delete files without asking me first.

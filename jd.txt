@@ -1,0 +1,30 @@
+Job Title: Senior Generative AI Engineer
+Location: Reston, VA (Hybrid, 3 days onsite) or Remote within the US
+Employment Type: 12 month contract with possible extension
+
+About the role
+We are a mortgage and housing finance organization building LLM powered assistants for underwriting, servicing and compliance teams. You will design, build and run production grade Generative AI applications, with a focus on retrieval augmented generation over large regulated document sets and agentic workflows that automate multi step analyst tasks.
+
+Responsibilities
+Design and build RAG pipelines over policy, guideline and loan documents, including chunking, embeddings, hybrid search and reranking.
+Build agentic workflows with LangGraph or similar orchestration frameworks, including tool calling and human in the loop review.
+Expose AI capabilities through secure Python APIs (FastAPI) and deploy them on AWS.
+Own LLM evaluation: golden datasets, automated regression checks, hallucination and groundedness metrics.
+Work with risk and compliance partners to put guardrails, audit logging and PII handling in place.
+Mentor engineers and help set best practices for prompt engineering and LLM ops.
+
+Required qualifications
+7+ years of experience in software engineering, machine learning or data science, with at least 2 years building LLM applications.
+Strong Python.
+Hands on experience with LLMs, RAG and prompt engineering.
+LangChain and LangGraph.
+Vector databases (pgvector, Pinecone, FAISS or similar).
+FastAPI or equivalent REST API frameworks.
+AWS (Bedrock, Lambda, ECS or SageMaker).
+
+Preferred qualifications
+LLM evaluation frameworks such as RAGAS or LangSmith.
+Fine-tuning or LoRA experience.
+Docker and Kubernetes.
+Experience in financial services, mortgage or another regulated industry.
+Azure OpenAI exposure.

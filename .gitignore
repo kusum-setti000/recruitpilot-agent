@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+recruiting_report.md
+reports/
+CLAUDE.local.md
+.claude/settings.local.json
+runs/
+.pytest_cache/
+recruiting_report.md
